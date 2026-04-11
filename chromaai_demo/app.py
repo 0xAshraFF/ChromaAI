@@ -436,7 +436,7 @@ def get_watermarked_video_bytes(frames_gray, fps):
             "-c:v", "libx264", "-preset", "fast", "-crf", "18",
             "-pix_fmt", "yuv420p", mp4_path
         ]
-        result = subprocess.run(cmd, capture_output=True, timeout=120)
+        result = subprocess.run(cmd, capture_output=True, timeout=300)
         if result.returncode != 0:
             return None
         
@@ -474,6 +474,8 @@ with st.sidebar:
     st.divider()
     st.markdown("### ⚙️ Settings")
     max_frames = st.slider("Frames to process", 1, 60, 10, help="More frames = slower but more thorough")
+    if max_frames > 30:
+        st.warning("Using more than 30 frames may take much longer and can temporarily freeze the app. Use 30 or fewer for faster results.")
     
     st.divider()
     st.markdown("### 📊 System Info")
