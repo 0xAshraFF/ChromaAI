@@ -474,6 +474,7 @@ with st.sidebar:
     st.divider()
     st.markdown("### ⚙️ Settings")
     max_frames = st.slider("Frames to process", 1, 30, 10, help="More frames = slower but more thorough")
+    st.caption("Frame processing is capped at 30 to keep the app responsive and avoid long video encoding waits.")
     
     st.divider()
     st.markdown("### 📊 System Info")
