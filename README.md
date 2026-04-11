@@ -189,4 +189,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Author
 
-Ashraful Islam — built with the same rigour applied to QA: every claim has a measurement, every limitation is documented.
+Ashraful Islam 
