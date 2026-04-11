@@ -473,9 +473,7 @@ with st.sidebar:
     
     st.divider()
     st.markdown("### ⚙️ Settings")
-    max_frames = st.slider("Frames to process", 1, 60, 10, help="More frames = slower but more thorough")
-    if max_frames > 30:
-        st.warning("Using more than 30 frames may take much longer and can temporarily freeze the app. Use 30 or fewer for faster results.")
+    max_frames = st.slider("Frames to process", 1, 30, 10, help="More frames = slower but more thorough")
     
     st.divider()
     st.markdown("### 📊 System Info")
