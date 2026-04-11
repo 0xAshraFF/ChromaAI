@@ -442,20 +442,6 @@ def get_watermarked_video_bytes(frames_gray, fps):
         
         with open(mp4_path, 'rb') as f:
             return f.read()
-                y = np.clip(frame, 0, 255).astype(np.uint8)
-                f.write(y.tobytes())
-                uv = np.full((h // 2, w // 2), 128, dtype=np.uint8)
-                f.write(uv.tobytes())
-                f.write(uv.tobytes())
-        
-        cmd = [
-            "ffmpeg", "-y", "-f", "rawvideo", "-pix_fmt", "yuv420p",
-            "-s", f"{w}x{h}", "-r", str(int(fps)),
-            "-i", yuv_path,
-            "-c:v", "libx264", "-preset", "fast", "-crf", "18",
-            "-pix_fmt", "yuv420p", output_path
-        ]
-        subprocess.run(cmd, capture_output=True, timeout=120)
 
 
 # ──────────────────────────────────────────────
