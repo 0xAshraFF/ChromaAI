@@ -1,4 +1,4 @@
-# ChromaCascade
+# ChromaAI
 
 **Watermarking your AI-generated videos.**
 
@@ -7,7 +7,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)]()
 [![v1.0.0](https://img.shields.io/badge/release-v1.0.0-green.svg)](https://github.com/0xAshraFF/ChromAI/releases/tag/v1.0.0)
 
-ChromaCascade embeds an invisible ownership signal into video frames using content-adaptive DCT coefficient modification. The signal survives H.265 compression, JPEG thumbnailing, and resizing without training a neural network.
+ChromaAI embeds an invisible ownership signal into video frames using content-adaptive DCT coefficient modification. The signal survives H.265 compression, JPEG thumbnailing, and resizing without training a neural network.
 
 ---
 
@@ -49,12 +49,12 @@ v0 → v1 cost: PSNR 48.5 → 44.9 dB (−3.5 dB, still imperceptible).
 
 | Method | H.265 Survival | Source |
 |---|---|---|
-| **ChromaCascade v1** | **95.9% (CRF28)** | This repo |
+| **ChromaAI v1** | **95.9% (CRF28)** | This repo |
 | HiDDeN | ~80–90% (lab) | Zhu et al., ECCV 2018 |
 | MBRS | ~85–92% (lab) | Jia et al., AAAI 2021 |
 | C2PA metadata | 0% (stripped on re-encode) | Coalition spec |
 
-> HiDDeN/MBRS require GPU training. ChromaCascade is CPU-only, zero training.
+> HiDDeN/MBRS require GPU training. ChromaAI is CPU-only, zero training.
 
 ---
 
@@ -113,7 +113,7 @@ print(f"Detected: {vresult.detected} | BRR: {vresult.band_b_brr:.1f}%")
 
 ## How It Works
 
-ChromaCascade modifies the DCT coefficient at position (0,2) in 8×8 luma blocks — a low-frequency position that survives most compression quantisation tables.
+ChromaAI modifies the DCT coefficient at position (0,2) in 8×8 luma blocks — a low-frequency position that survives most compression quantisation tables.
 
 **Content-adaptive alpha (v1 lookup):**
 
@@ -148,7 +148,7 @@ Values are absolute (not multipliers), calibrated from H.265 CRF28 survival curv
 ## Project Structure
 
 ```
-chromacascade/
+ChromaAI/
 ├── src/                        # Core library
 │   ├── core.py                 # DCT engine + EmbedConfig
 │   ├── embed.py                # Embed interface
@@ -179,7 +179,7 @@ pytest tests/ -v
 
 ## EU AI Act
 
-ChromaCascade addresses Article 50 of the EU AI Act (effective August 2026): machine-readable marking of AI-generated content. See [docs/eu-act.md](docs/eu-act.md).
+ChromaAI addresses Article 50 of the EU AI Act (effective August 2026): machine-readable marking of AI-generated content. See [docs/eu-act.md](docs/eu-act.md).
 
 ---
 
