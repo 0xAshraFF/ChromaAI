@@ -114,7 +114,7 @@
         "n_samples": 100,
         "pass_rate": 100.0,
         "passed": true,
-        "time_s": 0.22
+        "time_s": 0.21
       },
       "new": {
         "desc": "No attack (baseline)",
@@ -124,7 +124,7 @@
         "n_samples": 100,
         "pass_rate": 100.0,
         "passed": true,
-        "time_s": 0.24
+        "time_s": 0.22
       }
     },
     "h265_crf28": {
@@ -137,7 +137,7 @@
         "n_samples": 100,
         "pass_rate": 58.0,
         "passed": false,
-        "time_s": 4.01
+        "time_s": 3.93
       },
       "new": {
         "desc": "H.265 CRF28",
@@ -147,7 +147,7 @@
         "n_samples": 100,
         "pass_rate": 80.0,
         "passed": true,
-        "time_s": 3.85
+        "time_s": 3.94
       }
     },
     "h265_crf32": {
@@ -160,7 +160,7 @@
         "n_samples": 100,
         "pass_rate": 21.0,
         "passed": false,
-        "time_s": 3.61
+        "time_s": 3.56
       },
       "new": {
         "desc": "H.265 CRF32",
@@ -170,7 +170,7 @@
         "n_samples": 100,
         "pass_rate": 67.0,
         "passed": false,
-        "time_s": 3.59
+        "time_s": 3.53
       }
     },
     "h264_crf28": {
@@ -206,7 +206,7 @@
         "n_samples": 100,
         "pass_rate": 100.0,
         "passed": true,
-        "time_s": 0.4
+        "time_s": 0.41
       },
       "new": {
         "desc": "JPEG QF=90",
@@ -216,7 +216,7 @@
         "n_samples": 100,
         "pass_rate": 100.0,
         "passed": true,
-        "time_s": 0.4
+        "time_s": 0.43
       }
     },
     "jpeg_q70": {
@@ -252,7 +252,7 @@
         "n_samples": 100,
         "pass_rate": 50.0,
         "passed": false,
-        "time_s": 0.23
+        "time_s": 0.51
       },
       "new": {
         "desc": "Blur \u03c3=5",
@@ -275,7 +275,7 @@
         "n_samples": 100,
         "pass_rate": 0.0,
         "passed": false,
-        "time_s": 0.23
+        "time_s": 0.46
       },
       "new": {
         "desc": "Blur \u03c3=10",
@@ -298,7 +298,7 @@
         "n_samples": 100,
         "pass_rate": 5.0,
         "passed": false,
-        "time_s": 1.24
+        "time_s": 1.05
       },
       "new": {
         "desc": "AWGN 10 dB",
@@ -308,7 +308,7 @@
         "n_samples": 100,
         "pass_rate": 6.0,
         "passed": false,
-        "time_s": 0.95
+        "time_s": 1.0
       }
     },
     "crop_center": {
@@ -321,7 +321,7 @@
         "n_samples": 100,
         "pass_rate": 0.0,
         "passed": false,
-        "time_s": 0.25
+        "time_s": 0.22
       },
       "new": {
         "desc": "Crop 512\u00d7384 center",
@@ -331,7 +331,7 @@
         "n_samples": 100,
         "pass_rate": 0.0,
         "passed": false,
-        "time_s": 0.2
+        "time_s": 0.24
       }
     },
     "resize_07": {
@@ -344,7 +344,7 @@
         "n_samples": 100,
         "pass_rate": 62.0,
         "passed": false,
-        "time_s": 0.26
+        "time_s": 0.22
       },
       "new": {
         "desc": "Resize 0.7\u00d7 \u2192 back",
@@ -354,14 +354,14 @@
         "n_samples": 100,
         "pass_rate": 78.0,
         "passed": false,
-        "time_s": 0.22
+        "time_s": 0.26
       }
     },
     "resize_14": {
       "desc": "Resize 1.4\u00d7 \u2192 back",
       "old": {
         "desc": "Resize 1.4\u00d7 \u2192 back",
-        "mean_brr": 94.16015625,
+        "mean_brr": 94.15625,
         "min_brr": 48.4375,
         "pass_count": 76,
         "n_samples": 100,
@@ -377,7 +377,7 @@
         "n_samples": 100,
         "pass_rate": 85.0,
         "passed": true,
-        "time_s": 0.23
+        "time_s": 0.24
       }
     }
   },
@@ -390,7 +390,7 @@
       "n_samples": 100,
       "pass_rate": 95.0,
       "passed": true,
-      "time_s": 0.39
+      "time_s": 0.35
     },
     "blur_sigma2": {
       "desc": "Blur \u03c3=2",
@@ -410,7 +410,7 @@
       "n_samples": 100,
       "pass_rate": 74.0,
       "passed": false,
-      "time_s": 0.97
+      "time_s": 0.99
     }
   },
   "summary": {

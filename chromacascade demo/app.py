@@ -1,5 +1,5 @@
 """
-ChromaCascade — Interactive Video Watermarking Demo
+ChromaAI — Interactive Video Watermarking Demo
 ====================================================
 Embed invisible ownership signals into video frames.
 Prove they survive compression. Recover the identity.
@@ -20,7 +20,7 @@ import base64
 # Page config
 # ──────────────────────────────────────────────
 st.set_page_config(
-    page_title="ChromaCascade — Video Watermarking",
+    page_title="ChromaAI — Video Watermarking",
     page_icon="🌊",
     layout="wide",
 )
@@ -418,7 +418,7 @@ def write_watermarked_video(frames_gray, fps, output_path):
 # Main app
 # ──────────────────────────────────────────────
 
-st.markdown("# 🌊 ChromaCascade")
+st.markdown("# 🌊 ChromaAI")
 st.markdown("**Invisible video watermarking** — embed ownership identity into video frames that survives compression, resizing, and social media re-encoding.")
 
 st.divider()
