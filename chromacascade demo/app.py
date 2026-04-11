@@ -399,6 +399,50 @@ def write_watermarked_video(frames_gray, fps, output_path):
         with open(yuv_path, 'wb') as f:
             for frame in frames_gray:
                 y = np.clip(frame, 0, 255).astype(np.uint8)
+                uv = np.full((h // 2, w // 2), 128, dtype=np.uint8)
+                f.write(y.tobytes())
+                f.write(uv.tobytes())
+                f.write(uv.tobytes())
+        
+        cmd = [
+            "ffmpeg", "-y", "-f", "rawvideo", "-pix_fmt", "yuv420p",
+            "-s", f"{w}x{h}", "-r", str(fps), "-i", yuv_path,
+            "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+            "-pix_fmt", "yuv420p", output_path
+        ]
+        result = subprocess.run(cmd, capture_output=True, timeout=120)
+        return result.returncode == 0
+
+
+def get_watermarked_video_bytes(frames_gray, fps):
+    """Generate watermarked video as bytes for download."""
+    h, w = frames_gray[0].shape
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        yuv_path = os.path.join(tmpdir, "wm.yuv")
+        mp4_path = os.path.join(tmpdir, "wm.mp4")
+        
+        with open(yuv_path, 'wb') as f:
+            for frame in frames_gray:
+                y = np.clip(frame, 0, 255).astype(np.uint8)
+                uv = np.full((h // 2, w // 2), 128, dtype=np.uint8)
+                f.write(y.tobytes())
+                f.write(uv.tobytes())
+                f.write(uv.tobytes())
+        
+        cmd = [
+            "ffmpeg", "-y", "-f", "rawvideo", "-pix_fmt", "yuv420p",
+            "-s", f"{w}x{h}", "-r", str(fps), "-i", yuv_path,
+            "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+            "-pix_fmt", "yuv420p", mp4_path
+        ]
+        result = subprocess.run(cmd, capture_output=True, timeout=120)
+        if result.returncode != 0:
+            return None
+        
+        with open(mp4_path, 'rb') as f:
+            return f.read()
+                y = np.clip(frame, 0, 255).astype(np.uint8)
                 f.write(y.tobytes())
                 uv = np.full((h // 2, w // 2), 128, dtype=np.uint8)
                 f.write(uv.tobytes())
@@ -517,6 +561,15 @@ if uploaded and payload is not None:
             st.session_state['recovered_identity'] = recovered
             
             st.success("Watermark embedded successfully!")
+            
+            # Generate download bytes
+            with st.spinner("Preparing video for download..."):
+                video_bytes = get_watermarked_video_bytes(wm_frames, fps)
+                if video_bytes:
+                    st.session_state['wm_video_bytes'] = video_bytes
+                    st.success("Video ready for download!")
+                else:
+                    st.error("Failed to generate video file.")
         
         # Show results if available
         if 'wm_frames' in st.session_state:
@@ -533,6 +586,16 @@ if uploaded and payload is not None:
                 st.metric("Round-trip BRR", f"{st.session_state['roundtrip_brr']:.1f}%")
             with col3:
                 st.metric("Frames Embedded", f"{len(wm_frames)}")
+            
+            # Download button
+            if 'wm_video_bytes' in st.session_state:
+                st.download_button(
+                    label="📥 Download Watermarked Video",
+                    data=st.session_state['wm_video_bytes'],
+                    file_name="watermarked_video.mp4",
+                    mime="video/mp4",
+                    use_container_width=True
+                )
             
             # Visual comparison — first frame
             st.markdown("#### Visual Comparison (Frame 1)")
