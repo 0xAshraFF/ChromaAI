@@ -1,6 +1,6 @@
 # ChromaCascade
 
-**Honest dual-band DCT video watermarking. What we claim is what we measured.**
+**Watermarking your AI-generated videos.**
 
 [![CI](https://github.com/0xAshraFF/ChromAI/actions/workflows/ci.yml/badge.svg)](https://github.com/0xAshraFF/ChromAI/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
