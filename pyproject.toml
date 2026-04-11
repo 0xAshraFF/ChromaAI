@@ -1,5 +1,5 @@
 [project]
-name = "chromacascade"
+name = "chromaai"
 version = "1.0.0"
 description = "Honest dual-band DCT video watermarking"
 readme = "README.md"

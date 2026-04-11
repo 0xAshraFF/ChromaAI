@@ -1,4 +1,4 @@
-# ChromaCascade Benchmarks
+# ChromaAI Benchmarks
 
 **Version:** 1.0.0  
 **Last updated:** April 2026  
@@ -100,7 +100,7 @@ Alpha lookup: tex < 100 → α=37, tex ≥ 100 → α=32
 
 | Method | H.265 Survival | JPEG Survival | Source |
 |---|---|---|---|
-| **ChromaCascade v1** | **95.9% (CRF28)** | **100% (Q90)** | This work |
+| **ChromaAI v1** | **95.9% (CRF28)** | **100% (Q90)** | This work |
 | HiDDeN | ~80–90% (lab) | ~85–95% | ECCV 2018 |
 | MBRS | ~85–92% (lab) | ~90–95% | AAAI 2021 |
 | StegaStamp | not tested | ~90% | CVPR 2020 |

@@ -1,4 +1,4 @@
-"""ChromaCascade embed: Watermark video frames with dual-band DCT."""
+"""ChromaAI embed: Watermark video frames with dual-band DCT."""
 
 import numpy as np
 import cv2

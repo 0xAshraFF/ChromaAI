@@ -1,4 +1,4 @@
-"""ChromaCascade texture gating: Pre-embed quality assessment."""
+"""ChromaAI texture gating: Pre-embed quality assessment."""
 
 import numpy as np
 from .core import frame_texture_stats, compute_texture_energy

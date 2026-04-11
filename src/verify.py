@@ -1,4 +1,4 @@
-"""ChromaCascade verify: Detect and verify watermarks in video."""
+"""ChromaAI verify: Detect and verify watermarks in video."""
 
 import numpy as np
 import cv2

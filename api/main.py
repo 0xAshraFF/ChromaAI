@@ -1,4 +1,4 @@
-"""ChromaCascade API: FastAPI server for video watermarking."""
+"""ChromaAI API: FastAPI server for video watermarking."""
 
 import os
 import tempfile
@@ -17,7 +17,7 @@ from src.verify import verify_frame
 from src.texture_gating import assess_frame_quality
 
 app = FastAPI(
-    title="ChromaCascade",
+    title="ChromaAI",
     description=(
         "Honest dual-band DCT video watermarking API. "
         "Band B ownership signal survives H.265 CRF28 at 92% BRR. "
@@ -33,7 +33,7 @@ UPLOAD_DIR = tempfile.mkdtemp()
 @app.get("/")
 def root():
     return {
-        "service": "ChromaCascade",
+        "service": "ChromaAI",
         "version": "1.0.0",
         "endpoints": ["/embed", "/verify", "/quality", "/benchmark"],
         "honest_specs": {
