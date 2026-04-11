@@ -12,6 +12,7 @@ import subprocess
 import os
 import tempfile
 import struct
+import shutil
 from scipy.fft import dctn, idctn
 import io
 import base64
@@ -24,6 +25,8 @@ st.set_page_config(
     page_icon="🌊",
     layout="wide",
 )
+
+FFMPEG_AVAILABLE = shutil.which("ffmpeg") is not None
 
 # ──────────────────────────────────────────────
 # Custom CSS
@@ -269,7 +272,12 @@ def attack_h265(frame, crf=28):
             "-x265-params", "ctu=32:min-cu-size=8",
             "-pix_fmt", "yuv420p", mp4_path
         ]
-        result = subprocess.run(cmd, capture_output=True, timeout=60)
+        if not FFMPEG_AVAILABLE:
+            return None
+        try:
+            result = subprocess.run(cmd, capture_output=True, timeout=60)
+        except FileNotFoundError:
+            return None
         if result.returncode != 0:
             return None
         
@@ -329,7 +337,12 @@ def attack_youtube_proxy(frame):
             "-c:v", "libx264", "-preset", "medium", "-crf", "23",
             "-pix_fmt", "yuv420p", mp4_path
         ]
-        result = subprocess.run(cmd, capture_output=True, timeout=60)
+        if not FFMPEG_AVAILABLE:
+            return None
+        try:
+            result = subprocess.run(cmd, capture_output=True, timeout=60)
+        except FileNotFoundError:
+            return None
         if result.returncode != 0:
             return None
         
@@ -410,7 +423,12 @@ def write_watermarked_video(frames_gray, fps, output_path):
             "-c:v", "libx264", "-preset", "fast", "-crf", "18",
             "-pix_fmt", "yuv420p", output_path
         ]
-        result = subprocess.run(cmd, capture_output=True, timeout=120)
+        if not FFMPEG_AVAILABLE:
+            return False
+        try:
+            result = subprocess.run(cmd, capture_output=True, timeout=120)
+        except FileNotFoundError:
+            return False
         return result.returncode == 0
 
 
@@ -436,7 +454,12 @@ def get_watermarked_video_bytes(frames_gray, fps):
             "-c:v", "libx264", "-preset", "fast", "-crf", "18",
             "-pix_fmt", "yuv420p", mp4_path
         ]
-        result = subprocess.run(cmd, capture_output=True, timeout=300)
+        if not FFMPEG_AVAILABLE:
+            return None
+        try:
+            result = subprocess.run(cmd, capture_output=True, timeout=300)
+        except FileNotFoundError:
+            return None
         if result.returncode != 0:
             return None
         
@@ -450,6 +473,9 @@ def get_watermarked_video_bytes(frames_gray, fps):
 
 st.markdown("# 🌊 ChromaAI")
 st.markdown("**Invisible video watermarking** — embed ownership identity into video frames that survives compression, resizing, and social media re-encoding.")
+
+if not FFMPEG_AVAILABLE:
+    st.warning("FFmpeg is required for video export and attack simulation. Install FFmpeg or use a host that provides it.")
 
 st.divider()
 
