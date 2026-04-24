@@ -15,6 +15,16 @@ RS parameters:
 
 No interleaving is applied — the CRF28 RS diagnostic showed errors
 are sparse and non-bursty (worst case: 1 error / 256 bits, no runs).
+
+Ordering invariant (keyed path in ``src/core.py``):
+    bits_224 → encode_payload() → core.embed_band_*(..., key=k)
+    extract mirrors as:
+    extract_band_*(..., key=k) → decode_payload() → bits_224
+RS encoding therefore runs BEFORE sign scrambling, so the ECC layer only
+sees channel + adversary noise (not scrambler-induced bit flips). When
+``key is None`` the caller may pass any 256-bit payload and this module's
+behaviour is unchanged — the RS parameters RS(32,28), nsym=4, t=2 are
+load-bearing and must not change.
 """
 
 import numpy as np

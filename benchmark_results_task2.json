@@ -114,7 +114,7 @@
         "n_samples": 100,
         "pass_rate": 100.0,
         "passed": true,
-        "time_s": 0.21
+        "time_s": 0.2
       },
       "new": {
         "desc": "No attack (baseline)",
@@ -137,7 +137,7 @@
         "n_samples": 100,
         "pass_rate": 58.0,
         "passed": false,
-        "time_s": 3.93
+        "time_s": 4.03
       },
       "new": {
         "desc": "H.265 CRF28",
@@ -147,7 +147,7 @@
         "n_samples": 100,
         "pass_rate": 80.0,
         "passed": true,
-        "time_s": 3.94
+        "time_s": 3.83
       }
     },
     "h265_crf32": {
@@ -160,7 +160,7 @@
         "n_samples": 100,
         "pass_rate": 21.0,
         "passed": false,
-        "time_s": 3.56
+        "time_s": 3.86
       },
       "new": {
         "desc": "H.265 CRF32",
@@ -170,7 +170,7 @@
         "n_samples": 100,
         "pass_rate": 67.0,
         "passed": false,
-        "time_s": 3.53
+        "time_s": 3.48
       }
     },
     "h264_crf28": {
@@ -183,7 +183,7 @@
         "n_samples": 100,
         "pass_rate": 53.0,
         "passed": false,
-        "time_s": 2.33
+        "time_s": 2.3
       },
       "new": {
         "desc": "H.264 CRF28",
@@ -193,7 +193,7 @@
         "n_samples": 100,
         "pass_rate": 80.0,
         "passed": false,
-        "time_s": 2.33
+        "time_s": 2.29
       }
     },
     "jpeg_q90": {
@@ -206,7 +206,7 @@
         "n_samples": 100,
         "pass_rate": 100.0,
         "passed": true,
-        "time_s": 0.41
+        "time_s": 0.4
       },
       "new": {
         "desc": "JPEG QF=90",
@@ -216,7 +216,7 @@
         "n_samples": 100,
         "pass_rate": 100.0,
         "passed": true,
-        "time_s": 0.43
+        "time_s": 0.39
       }
     },
     "jpeg_q70": {
@@ -239,7 +239,7 @@
         "n_samples": 100,
         "pass_rate": 100.0,
         "passed": true,
-        "time_s": 0.37
+        "time_s": 0.36
       }
     },
     "blur_sigma5": {
@@ -252,7 +252,7 @@
         "n_samples": 100,
         "pass_rate": 50.0,
         "passed": false,
-        "time_s": 0.51
+        "time_s": 0.23
       },
       "new": {
         "desc": "Blur \u03c3=5",
@@ -275,7 +275,7 @@
         "n_samples": 100,
         "pass_rate": 0.0,
         "passed": false,
-        "time_s": 0.46
+        "time_s": 0.24
       },
       "new": {
         "desc": "Blur \u03c3=10",
@@ -298,7 +298,7 @@
         "n_samples": 100,
         "pass_rate": 5.0,
         "passed": false,
-        "time_s": 1.05
+        "time_s": 1.0
       },
       "new": {
         "desc": "AWGN 10 dB",
@@ -321,7 +321,7 @@
         "n_samples": 100,
         "pass_rate": 0.0,
         "passed": false,
-        "time_s": 0.22
+        "time_s": 0.24
       },
       "new": {
         "desc": "Crop 512\u00d7384 center",
@@ -331,7 +331,7 @@
         "n_samples": 100,
         "pass_rate": 0.0,
         "passed": false,
-        "time_s": 0.24
+        "time_s": 0.21
       }
     },
     "resize_07": {
@@ -344,7 +344,7 @@
         "n_samples": 100,
         "pass_rate": 62.0,
         "passed": false,
-        "time_s": 0.22
+        "time_s": 0.23
       },
       "new": {
         "desc": "Resize 0.7\u00d7 \u2192 back",
@@ -354,14 +354,14 @@
         "n_samples": 100,
         "pass_rate": 78.0,
         "passed": false,
-        "time_s": 0.26
+        "time_s": 0.23
       }
     },
     "resize_14": {
       "desc": "Resize 1.4\u00d7 \u2192 back",
       "old": {
         "desc": "Resize 1.4\u00d7 \u2192 back",
-        "mean_brr": 94.15625,
+        "mean_brr": 94.16015625,
         "min_brr": 48.4375,
         "pass_count": 76,
         "n_samples": 100,
@@ -400,7 +400,7 @@
       "n_samples": 100,
       "pass_rate": 68.0,
       "passed": false,
-      "time_s": 0.22
+      "time_s": 0.23
     },
     "awgn_20db": {
       "desc": "AWGN 20 dB",
@@ -410,13 +410,47 @@
       "n_samples": 100,
       "pass_rate": 74.0,
       "passed": false,
-      "time_s": 0.99
+      "time_s": 1.0
+    }
+  },
+  "informed_adversary": {
+    "zero_known": {
+      "desc": "Surgical DCT zeroing at published positions",
+      "unkeyed_mean_brr": 58.3515625,
+      "keyed_mean_brr": 89.02734375,
+      "n_samples": 100
+    },
+    "averaging_10": {
+      "desc": "Oracle template averaging, N=10 paired samples",
+      "unkeyed_mean_brr": 67.08984375,
+      "keyed_mean_brr": 99.88671875,
+      "n_samples": 100
+    },
+    "averaging_50": {
+      "desc": "Oracle template averaging, N=50 paired samples",
+      "unkeyed_mean_brr": 44.7421875,
+      "keyed_mean_brr": 92.890625,
+      "n_samples": 100
+    },
+    "averaging_200": {
+      "desc": "Oracle template averaging, N=200 paired samples",
+      "unkeyed_mean_brr": 32.83203125,
+      "keyed_mean_brr": 95.07421875,
+      "n_samples": 100
+    },
+    "wrong_key": {
+      "desc": "Extract keyed stream with a different master key",
+      "unkeyed_mean_brr": 100.0,
+      "keyed_mean_brr": 50.04296875,
+      "n_samples": 100
     }
   },
   "summary": {
     "old_attacks_passed": 3,
     "new_attacks_passed": 5,
     "old_mean_psnr": 48.48,
-    "new_mean_psnr": 44.93
+    "new_mean_psnr": 44.93,
+    "channel_noise_crf28_mean_brr": 95.87890625,
+    "channel_noise_crf28_baseline": 95.9
   }
 }

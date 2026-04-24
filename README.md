@@ -183,6 +183,17 @@ chroma-ai addresses Article 50 of the EU AI Act (effective August 2026): machine
 
 ---
 
+## Security
+
+An optional keyed variant (ChaCha20 keystream + HKDF-SHA256 per-GOP subkeys) defends against informed-adversary attacks on the unkeyed watermark. Pass `key=<bytes>` and `frame_idx=<int>` to `embed_band_*` / `extract_band_*` to enable.
+
+- Defends against: WOA template estimation, spectral averaging, surgical zeroing of known DCT positions.
+- Does not defend against: master-key leak (KMA), single-sample forgery (open problem), V2V model regeneration.
+
+Full threat model and key-management guidance: [SECURITY.md](SECURITY.md).
+
+---
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

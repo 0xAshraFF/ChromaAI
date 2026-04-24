@@ -40,10 +40,12 @@ import tempfile
 from pathlib import Path
 from scipy.fft import dctn, idctn
 
+import hashlib
+
 from src.core import (
     EmbedConfig, embed_band_b, extract_band_b,
     generate_payload, compute_psnr, compute_brr, compute_texture_energy,
-    BAND_B_POSITION,
+    BAND_B_POSITION, BAND_A_POSITIONS, ZIGZAG_8x8,
 )
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -56,6 +58,10 @@ WORK_DIR   = tempfile.mkdtemp(prefix='cc_bench_')
 
 CONFIG_NEW = EmbedConfig(adaptive=True)   # Task 2 lookup (in src/core.py)
 PAYLOAD    = generate_payload(PAYLOAD_N, seed=42)
+
+# Demo master key for benchmark use only — never ship a hardcoded key.
+DEMO_MASTER_KEY = hashlib.sha256(b"chroma-ai-bench-demo").digest()
+WRONG_KEY       = hashlib.sha256(b"chroma-ai-bench-wrong").digest()
 
 
 # ── Old alpha embed (original multiplier table) ───────────────────────────────
@@ -194,6 +200,131 @@ SUPPLEMENTARY_ATTACKS = {
 }
 
 
+# ── Informed-adversary attacks (run only against keyed + unkeyed Band B) ─────
+_ZERO_POSITIONS = [BAND_B_POSITION] + [ZIGZAG_8x8[i] for i in range(14, 22)]
+
+
+def attack_zero_known(frames):
+    """Zero the published Band B + Band A coefficients on every 8×8 block.
+
+    Simulates the paper-reader attack: the attacker reads the spec and
+    surgically removes signal at every known embedding location.
+    Should destroy the unkeyed signal while leaving the keyed signal mostly
+    intact (keyed embeds at rotated/shuffled positions).
+    """
+    out = []
+    for f in frames:
+        fp = f.astype(np.float64).copy()
+        hh, ww = fp.shape
+        for by in range(0, hh - 7, 8):
+            for bx in range(0, ww - 7, 8):
+                d = dctn(fp[by:by+8, bx:bx+8], type=2, norm='ortho')
+                for r, c in _ZERO_POSITIONS:
+                    d[r, c] = 0.0
+                fp[by:by+8, bx:bx+8] = idctn(d, type=2, norm='ortho')
+        out.append(np.clip(fp, 0, 255).astype(np.uint8))
+    return out
+
+
+def attack_averaging(test_frames, pool_watermarked, pool_originals, N):
+    """Worst-case oracle averaging attack (attacker has paired originals).
+
+    Estimates template = mean(watermarked - original) across N paired samples,
+    then subtracts from each test frame. Against an unkeyed additive watermark
+    the template converges quickly; against a keyed watermark each block's
+    residual sign/position varies, so the mean collapses toward zero.
+    """
+    n_use = min(N, len(pool_watermarked), len(pool_originals))
+    residuals = [pool_watermarked[i].astype(np.float64) - pool_originals[i].astype(np.float64)
+                 for i in range(n_use)]
+    template = np.mean(np.stack(residuals, axis=0), axis=0)
+    out = []
+    for f in test_frames:
+        attacked = f.astype(np.float64) - template
+        out.append(np.clip(attacked, 0, 255).astype(np.uint8))
+    return out
+
+
+def _extract_brr_unkeyed(frame_u8):
+    ext = extract_band_b(frame_u8.astype(np.float64), PAYLOAD_N)
+    return compute_brr(PAYLOAD, ext)
+
+
+def _extract_brr_keyed(frame_u8, key, frame_idx):
+    from src.core import extract_band_b as ex_b
+    ext = ex_b(frame_u8.astype(np.float64), PAYLOAD_N, key=key, frame_idx=frame_idx)
+    # Keyed path may skip blocks (P=0.75 gating) so it may return < PAYLOAD_N bits.
+    return compute_brr(PAYLOAD[:len(ext)], ext)
+
+
+def run_informed_adversary(emb_unkeyed, emb_keyed, originals, accepted):
+    """Run informed-adversary attack suite on both unkeyed and keyed variants.
+
+    Returns a dict keyed by attack name with per-variant BRR stats.
+    ``emb_unkeyed``, ``emb_keyed``, ``originals`` are dicts:
+        clip_name -> list of N_FRAMES arrays.
+    """
+    results = {}
+
+    # Flatten pools for averaging: (watermarked_frame, original_frame) pairs.
+    pool_wm_u, pool_wm_k, pool_o = [], [], []
+    for name in accepted:
+        pool_wm_u.extend(emb_unkeyed[name])
+        pool_wm_k.extend(emb_keyed[name])
+        pool_o.extend(originals[name])
+
+    # ── attack_zero_known ────────────────────────────────────────────────────
+    u_brrs, k_brrs = [], []
+    for name in accepted:
+        atk_u = attack_zero_known(emb_unkeyed[name])
+        atk_k = attack_zero_known(emb_keyed[name])
+        for f in atk_u:
+            u_brrs.append(_extract_brr_unkeyed(f))
+        for idx, f in enumerate(atk_k):
+            k_brrs.append(_extract_brr_keyed(f, DEMO_MASTER_KEY, idx))
+    results['zero_known'] = {
+        'desc': 'Surgical DCT zeroing at published positions',
+        'unkeyed_mean_brr': float(np.mean(u_brrs)),
+        'keyed_mean_brr':   float(np.mean(k_brrs)),
+        'n_samples':        len(u_brrs),
+    }
+
+    # ── attack_averaging_N ───────────────────────────────────────────────────
+    for N in (10, 50, 200):
+        u_brrs, k_brrs = [], []
+        for name in accepted:
+            atk_u = attack_averaging(emb_unkeyed[name], pool_wm_u, pool_o, N)
+            atk_k = attack_averaging(emb_keyed[name],   pool_wm_k, pool_o, N)
+            for f in atk_u:
+                u_brrs.append(_extract_brr_unkeyed(f))
+            for idx, f in enumerate(atk_k):
+                k_brrs.append(_extract_brr_keyed(f, DEMO_MASTER_KEY, idx))
+        results[f'averaging_{N}'] = {
+            'desc': f'Oracle template averaging, N={N} paired samples',
+            'unkeyed_mean_brr': float(np.mean(u_brrs)),
+            'keyed_mean_brr':   float(np.mean(k_brrs)),
+            'n_samples':        len(u_brrs),
+        }
+
+    # ── attack_wrong_key ─────────────────────────────────────────────────────
+    # No frame modification — just extract with the wrong key on the keyed
+    # stream (and with no key on the unkeyed stream for parity).
+    u_brrs, k_brrs = [], []
+    for name in accepted:
+        for idx, f in enumerate(emb_unkeyed[name]):
+            u_brrs.append(_extract_brr_unkeyed(f))   # baseline (same-key path)
+        for idx, f in enumerate(emb_keyed[name]):
+            k_brrs.append(_extract_brr_keyed(f, WRONG_KEY, idx))
+    results['wrong_key'] = {
+        'desc': 'Extract keyed stream with a different master key',
+        'unkeyed_mean_brr': float(np.mean(u_brrs)),
+        'keyed_mean_brr':   float(np.mean(k_brrs)),
+        'n_samples':        len(u_brrs),
+    }
+
+    return results
+
+
 # ── Core sweep: run one embed config through one attack set ───────────────────
 def sweep(embedded: dict, accepted: list, attacks: dict) -> dict:
     """
@@ -321,6 +452,38 @@ def run():
     print('Running supplementary attacks (NEW alphas only)…')
     res_supp = sweep(emb_new, accepted, SUPPLEMENTARY_ATTACKS)
 
+    # ── Informed-adversary: build keyed embeddings + attack suite ───────────
+    print('\nEmbedding — keyed variant (ChaCha20/HKDF)…')
+    from src.core import embed_band_b as _eb
+    originals = {}
+    emb_keyed = {}
+    for name, gen in CLIPS.items():
+        origs = [gen(i).astype(np.float64) for i in range(N_FRAMES)]
+        originals[name] = [np.clip(o, 0, 255).astype(np.uint8) for o in origs]
+        keyed = [_eb(o, PAYLOAD, CONFIG_NEW, key=DEMO_MASTER_KEY, frame_idx=i)
+                 for i, o in enumerate(origs)]
+        emb_keyed[name] = [np.clip(k, 0, 255).astype(np.uint8) for k in keyed]
+
+    print('Running informed-adversary attacks…')
+    res_informed = run_informed_adversary(emb_new, emb_keyed, originals, accepted)
+
+    print('\nINFORMED-ADVERSARY ATTACKS (unkeyed vs keyed)')
+    print('-' * 76)
+    print(f'  {"Attack":<22}  {"Unkeyed BRR":>12}  {"Keyed BRR":>12}  {"Δ (keyed-unkeyed)":>18}')
+    print('-' * 76)
+    for atk, r in res_informed.items():
+        delta = r['keyed_mean_brr'] - r['unkeyed_mean_brr']
+        print(f'  {atk:<22}  {r["unkeyed_mean_brr"]:>11.1f}%  {r["keyed_mean_brr"]:>11.1f}%  {delta:>+17.1f}%')
+
+    # ── Channel-noise regression guard ──────────────────────────────────────
+    baseline_crf28 = 95.9
+    actual_crf28 = res_new.get('h265_crf28', {}).get('mean_brr')
+    if actual_crf28 is not None:
+        delta = actual_crf28 - baseline_crf28
+        tag = 'OK' if delta >= -2.0 else 'CHANNEL_NOISE_REGRESSION'
+        print(f'\n[{tag}] h265_crf28 new={actual_crf28:.1f}% vs baseline {baseline_crf28:.1f}% '
+              f'(Δ {delta:+.1f}%)')
+
     print('\nSUPPLEMENTARY ATTACKS (Task 2 alphas, not in original matrix)')
     print('-' * 60)
     print(f'  {"Attack":<18}  {"Description":<22}  {"NEW BRR":>8}  {"Pass":>5}')
@@ -374,11 +537,14 @@ def run():
             for atk in PRIMARY_ATTACKS
         },
         'supplementary_attacks': res_supp,
+        'informed_adversary': res_informed,
         'summary': {
             'old_attacks_passed': old_passed,
             'new_attacks_passed': new_passed,
             'old_mean_psnr': round(old_mp, 2),
             'new_mean_psnr': round(new_mp, 2),
+            'channel_noise_crf28_mean_brr': actual_crf28,
+            'channel_noise_crf28_baseline': baseline_crf28,
         },
     }
     out_path = Path(__file__).parent / 'benchmark_results_task2.json'

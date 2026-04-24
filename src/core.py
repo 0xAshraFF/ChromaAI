@@ -19,6 +19,25 @@ ZIGZAG_8x8 = [
 BAND_A_POSITIONS = [ZIGZAG_8x8[i] for i in range(14, 22)]
 BAND_B_POSITION = (0, 2)
 
+# ── Keyed security layer (used only when key is not None) ────────────────────
+# Candidate Band B positions rotated per-block via keystream.
+BAND_B_POSITIONS_KEYED = [(0, 2), (0, 3), (1, 2), (2, 1)]
+# Number of Band A coefficients used per block in the keyed path (down from 8,
+# offsetting the entropy cost of randomising positions via Fisher-Yates).
+BAND_A_KEYED_TAKE = 4
+# Keystream byte threshold for block gating: embed iff ks[0] < 192 → P=0.75.
+_KEYED_GATE_THRESHOLD = 192
+
+
+def _fisher_yates(items, rnd_bytes):
+    """Keystream-seeded Fisher-Yates shuffle; returns a new list."""
+    out = list(items)
+    n = len(out)
+    for i in range(n - 1, 0, -1):
+        j = rnd_bytes[i] % (i + 1)
+        out[i], out[j] = out[j], out[i]
+    return out
+
 
 @dataclass
 class EmbedConfig:
@@ -82,19 +101,40 @@ def compute_psnr(original: np.ndarray, modified: np.ndarray) -> float:
 
 
 def embed_band_b(frame: np.ndarray, payload: np.ndarray,
-                 config: EmbedConfig) -> np.ndarray:
+                 config: EmbedConfig,
+                 key: Optional[bytes] = None,
+                 frame_idx: int = 0) -> np.ndarray:
     """
     Content-adaptive Band B embedding at DCT position (0,2).
     Flat blocks receive higher alpha to compensate for low coefficient magnitude.
+
+    When ``key`` is None: original behavior (fixed position, no scrambling).
+    When ``key`` is provided: per-block position rotation, sign scrambling,
+    and block gating driven by a ChaCha20 keystream (see src/keyed_crypto.py).
     """
     h, w = frame.shape
     emb = frame.copy()
     bi = 0
 
+    if key is not None:
+        from .keyed_crypto import block_keystream, zero_buffer
+
     for by in range(0, h - 7, 8):
         for bx in range(0, w - 7, 8):
             if bi >= len(payload):
                 return emb
+
+            if key is not None:
+                ks = block_keystream(key, frame_idx, by, bx, 16)
+                if ks[0] >= _KEYED_GATE_THRESHOLD:
+                    zero_buffer(ks)
+                    continue
+                pos = BAND_B_POSITIONS_KEYED[ks[1] % 4]
+                xor_bit = ks[2] & 1
+                zero_buffer(ks)
+            else:
+                pos = BAND_B_POSITION
+                xor_bit = 0
 
             blk = emb[by:by+8, bx:bx+8].copy()
 
@@ -110,8 +150,9 @@ def embed_band_b(frame: np.ndarray, payload: np.ndarray,
                 local_alpha = config.band_b_alpha
 
             d = dctn(blk, type=2, norm='ortho')
-            r, c = BAND_B_POSITION
-            d[r, c] = (abs(d[r, c]) + local_alpha) if payload[bi] == 1 \
+            r, c = pos
+            bit = int(payload[bi]) ^ xor_bit
+            d[r, c] = (abs(d[r, c]) + local_alpha) if bit == 1 \
                 else -(abs(d[r, c]) + local_alpha)
             emb[by:by+8, bx:bx+8] = idctn(d, type=2, norm='ortho')
             bi += 1
@@ -120,10 +161,17 @@ def embed_band_b(frame: np.ndarray, payload: np.ndarray,
 
 
 def embed_band_a(frame: np.ndarray, payload: np.ndarray,
-                 config: EmbedConfig) -> tuple[np.ndarray, int, int]:
+                 config: EmbedConfig,
+                 key: Optional[bytes] = None,
+                 frame_idx: int = 0) -> tuple[np.ndarray, int, int]:
     """
     Texture-gated Band A embedding at zigzag positions 14-21.
     Returns (embedded_frame, blocks_used, blocks_skipped).
+
+    When ``key`` is provided: positions are a keystream-seeded Fisher-Yates
+    shuffle of zigzag[14:22] truncated to BAND_A_KEYED_TAKE=4 coefficients,
+    sign is XOR-scrambled, and blocks are additionally gated at P=0.75.
+    Texture gating is preserved on both paths.
     """
     h, w = frame.shape
     emb = frame.copy()
@@ -131,10 +179,27 @@ def embed_band_a(frame: np.ndarray, payload: np.ndarray,
     used = 0
     skipped = 0
 
+    if key is not None:
+        from .keyed_crypto import block_keystream, zero_buffer
+
     for by in range(0, h - 7, 8):
         for bx in range(0, w - 7, 8):
             if bi >= len(payload):
                 return emb, used, skipped
+
+            if key is not None:
+                ks = block_keystream(key, frame_idx, by, bx, 16)
+                if ks[0] >= _KEYED_GATE_THRESHOLD:
+                    zero_buffer(ks)
+                    skipped += 1
+                    continue
+                xor_bit = ks[2] & 1
+                shuffled = _fisher_yates(BAND_A_POSITIONS, bytes(ks[3:11]))
+                positions = shuffled[:BAND_A_KEYED_TAKE]
+                zero_buffer(ks)
+            else:
+                xor_bit = 0
+                positions = BAND_A_POSITIONS
 
             blk = emb[by:by+8, bx:bx+8].copy()
             tex = compute_texture_energy(blk)
@@ -146,9 +211,9 @@ def embed_band_a(frame: np.ndarray, payload: np.ndarray,
 
             local_alpha = config.band_a_alpha * max(0.5, min(2.0, 200.0 / (tex + 1)))
             d = dctn(blk, type=2, norm='ortho')
-            bit = payload[bi]
+            bit = int(payload[bi]) ^ xor_bit
 
-            for r, c in BAND_A_POSITIONS:
+            for r, c in positions:
                 d[r, c] = (abs(d[r, c]) + local_alpha) if bit == 1 \
                     else -(abs(d[r, c]) + local_alpha)
 
@@ -159,30 +224,79 @@ def embed_band_a(frame: np.ndarray, payload: np.ndarray,
     return emb, used, skipped
 
 
-def extract_band_b(frame: np.ndarray, n: int) -> np.ndarray:
-    """Extract n bits from Band B position (0,2)."""
+def extract_band_b(frame: np.ndarray, n: int,
+                   key: Optional[bytes] = None,
+                   frame_idx: int = 0) -> np.ndarray:
+    """Extract n bits from Band B. Keyed extract mirrors the keyed embed:
+    same keystream-driven block gating, position rotation, and sign unscramble.
+    """
     h, w = frame.shape
     bits = []
+
+    if key is not None:
+        from .keyed_crypto import block_keystream, zero_buffer
+
     for by in range(0, h - 7, 8):
         for bx in range(0, w - 7, 8):
             if len(bits) >= n:
                 return np.array(bits, dtype=np.uint8)
+
+            if key is not None:
+                ks = block_keystream(key, frame_idx, by, bx, 16)
+                if ks[0] >= _KEYED_GATE_THRESHOLD:
+                    zero_buffer(ks)
+                    continue
+                pos = BAND_B_POSITIONS_KEYED[ks[1] % 4]
+                xor_bit = ks[2] & 1
+                zero_buffer(ks)
+            else:
+                pos = BAND_B_POSITION
+                xor_bit = 0
+
             d = dctn(frame[by:by+8, bx:bx+8], type=2, norm='ortho')
-            bits.append(1 if d[BAND_B_POSITION] > 0 else 0)
+            sign_bit = 1 if d[pos] > 0 else 0
+            bits.append(sign_bit ^ xor_bit)
     return np.array(bits, dtype=np.uint8)
 
 
-def extract_band_a(frame: np.ndarray, n: int) -> np.ndarray:
-    """Extract n bits from Band A with majority voting across ZZ 14-21."""
+def extract_band_a(frame: np.ndarray, n: int,
+                   key: Optional[bytes] = None,
+                   frame_idx: int = 0) -> np.ndarray:
+    """Extract n bits from Band A with majority voting.
+
+    Unkeyed: votes across the fixed zigzag[14:22] positions.
+    Keyed: re-derives the per-block shuffle + gating from the keystream and
+    votes across the shuffled first BAND_A_KEYED_TAKE positions, unscrambling
+    the sign.
+    """
     h, w = frame.shape
     bits = []
+
+    if key is not None:
+        from .keyed_crypto import block_keystream, zero_buffer
+
     for by in range(0, h - 7, 8):
         for bx in range(0, w - 7, 8):
             if len(bits) >= n:
                 return np.array(bits, dtype=np.uint8)
+
+            if key is not None:
+                ks = block_keystream(key, frame_idx, by, bx, 16)
+                if ks[0] >= _KEYED_GATE_THRESHOLD:
+                    zero_buffer(ks)
+                    continue
+                xor_bit = ks[2] & 1
+                shuffled = _fisher_yates(BAND_A_POSITIONS, bytes(ks[3:11]))
+                positions = shuffled[:BAND_A_KEYED_TAKE]
+                zero_buffer(ks)
+            else:
+                xor_bit = 0
+                positions = BAND_A_POSITIONS
+
             d = dctn(frame[by:by+8, bx:bx+8], type=2, norm='ortho')
-            votes = sum(1 if d[r, c] > 0 else -1 for r, c in BAND_A_POSITIONS)
-            bits.append(1 if votes > 0 else 0)
+            votes = sum(1 if d[r, c] > 0 else -1 for r, c in positions)
+            sign_bit = 1 if votes > 0 else 0
+            bits.append(sign_bit ^ xor_bit)
     return np.array(bits, dtype=np.uint8)
 
 

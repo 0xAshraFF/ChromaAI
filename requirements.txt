@@ -6,3 +6,5 @@ uvicorn>=0.23
 python-multipart>=0.0.6
 streamlit>=1.28
 pytest>=7.4
+cryptography>=41.0
+reedsolo>=1.7
