@@ -55,3 +55,9 @@ rs_diag_crf*/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+
+# Claude Code tool config
+.claude/
+
+# Raw YUV video files
+*.yuv

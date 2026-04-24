@@ -196,3 +196,19 @@ git push origin feature-name
 
 *Last Updated: 2026-04-14  
 Session: Initial development and stabilization*
+
+---
+
+## V2 Item — Keyed Security (COMPLETE)
+- src/keyed_crypto.py: ChaCha20 + HKDF, 6 unit tests
+- src/core.py: additive key param, backward-compat when key=None
+- SECURITY.md: Cayre-Bas threat model documented
+- Benchmarks:
+  - Channel-noise Δ 0.0% vs baseline (CRF28 95.9%)
+  - Informed-adversary BRR retention:
+    - zero_known: 58.4% -> 89.0% (+30.7%)
+    - averaging_10: 67.1% -> 99.9% (+32.8%)
+    - averaging_50: 44.7% -> 92.9% (+48.1%)
+    - averaging_200: 32.8% -> 95.1% (+62.2%)
+    - wrong_key: 50.0% noise floor (as designed)
+- Results: benchmark_results_task2.json -> informed_adversary section
