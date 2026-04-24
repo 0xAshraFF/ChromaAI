@@ -1,4 +1,4 @@
-# ChromaAI API Reference
+# chroma-ai API Reference
 
 ## Base URL
 

@@ -1,5 +1,5 @@
 """
-ChromaAI Core Engine
+chroma-ai Core Engine
 DCT-domain video watermarking with Task 2 calibrated alphas.
 """
 

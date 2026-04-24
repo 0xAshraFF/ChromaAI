@@ -1,4 +1,4 @@
-"""ChromaAI core DCT watermark engine."""
+"""chroma-ai core DCT watermark engine."""
 
 import numpy as np
 from scipy.fft import dctn, idctn

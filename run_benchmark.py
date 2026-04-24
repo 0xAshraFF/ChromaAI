@@ -1,5 +1,5 @@
 """
-ChromaAI — Before/After Benchmark: Original vs Task 2 Alpha Lookup
+chroma-ai — Before/After Benchmark: Original vs Task 2 Alpha Lookup
 ========================================================================
 Runs the same 20 clips × 12 attacks under both alpha configurations so
 reviewers can see a consistent before/after on an identical attack matrix.
@@ -237,7 +237,7 @@ def run():
     t0_total = time.time()
 
     print('=' * 76)
-    print('ChromaAI Benchmark — Before/After Alpha Lookup Comparison')
+    print('chroma-ai Benchmark — Before/After Alpha Lookup Comparison')
     print(f'  {len(CLIPS)} clips  ×  {N_FRAMES} frames  ×  {len(PRIMARY_ATTACKS)} primary attacks')
     print(f'  Pass threshold : BRR ≥ {PASS_BRR}%   PSNR gate : ≥ {PSNR_GATE} dB')
     print('=' * 76)

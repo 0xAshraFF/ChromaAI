@@ -1,5 +1,5 @@
 """
-ChromaAI — Interactive Video Watermarking Demo
+chroma-ai — Interactive Video Watermarking Demo
 ====================================================
 Embed invisible ownership signals into video frames.
 Prove they survive compression. Recover the identity.
@@ -21,7 +21,7 @@ import base64
 # Page config
 # ──────────────────────────────────────────────
 st.set_page_config(
-    page_title="ChromaAI — Video Watermarking",
+    page_title="chroma-ai — Video Watermarking",
     page_icon="🌊",
     layout="wide",
 )
@@ -471,7 +471,7 @@ def get_watermarked_video_bytes(frames_gray, fps):
 # Main app
 # ──────────────────────────────────────────────
 
-st.markdown("# 🌊 ChromaAI")
+st.markdown("# 🌊 chroma-ai")
 st.markdown("**Invisible video watermarking** — embed ownership identity into video frames that survives compression, resizing, and social media re-encoding.")
 
 if not FFMPEG_AVAILABLE:

@@ -1,4 +1,4 @@
-"""ChromaAI test suite: Validates core claims with synthetic content."""
+"""chroma-ai test suite: Validates core claims with synthetic content."""
 
 import numpy as np
 import cv2

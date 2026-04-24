@@ -1,5 +1,5 @@
 """
-rs_codec.py — Reed-Solomon codec for ChromaAI Band B payload
+rs_codec.py — Reed-Solomon codec for chroma-ai Band B payload
 =================================================================
 RS(32,28) over GF(2^8) via the reedsolo library.
 

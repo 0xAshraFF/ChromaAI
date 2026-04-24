@@ -1,4 +1,4 @@
-"""ChromaAI Streamlit Demo: Upload → Embed → Attack → Verify."""
+"""chroma-ai Streamlit Demo: Upload → Embed → Attack → Verify."""
 
 import streamlit as st
 import numpy as np
@@ -13,9 +13,9 @@ from src.embed import embed_frame
 from src.verify import verify_frame
 from src.texture_gating import assess_frame_quality
 
-st.set_page_config(page_title="ChromaAI Demo", page_icon="🌊", layout="wide")
+st.set_page_config(page_title="chroma-ai Demo", page_icon="🌊", layout="wide")
 
-st.title("🌊 ChromaAI Watermark Demo")
+st.title("🌊 chroma-ai Watermark Demo")
 st.caption("Honest dual-band DCT watermarking. What you see is what you get.")
 
 col1, col2 = st.columns(2)
